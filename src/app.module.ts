@@ -5,6 +5,7 @@ import { UserModule } from './layers/user/user.module';
 import { AddressesModule } from './layers/adresses/addresses.module';
 import { CategoryModule } from './layers/category/category.module';
 import { ProductModule } from './layers/product/product.module';
+import { ReviewModule } from './layers/review/review.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ProductModule } from './layers/product/product.module';
     ProductModule,
     AddressesModule,
     CategoryModule,
+    ReviewModule,
   ],
 })
 export class AppModule {}
