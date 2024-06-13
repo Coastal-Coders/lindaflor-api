@@ -32,10 +32,10 @@ model User {
   updatedAt DateTime  @updatedAt
 
   role      UserRoles @default(GUEST)
-  products  Product[]
-  orders    Order[]
-  reviews   Review[]
-  addresses Address[]
+  // products  Product[]
+  // orders    Order[]
+  // reviews   Review[]
+  // addresses Address[]
 
   @@index([role])
 }
@@ -48,9 +48,12 @@ model Address {
   postalCode  String
   country     String
   createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  userId      String     @db.ObjectId
-  user        User       @relation(fields: [userId], references: [id])
+  // userId      String     @db.ObjectId
+  // user        User       @relation(fields: [userId], references: [id])
+
+  // @@index([userId])
 }
 
 enum ProductSize {
@@ -68,20 +71,21 @@ model Product {
   price       Float
   size        ProductSize
   color       String
-  stock       Int
+  stock       Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  userId      String    @db.ObjectId
-  user        User      @relation(fields: [userId], references: [id])
+  // userId      String    @db.ObjectId
+  // user        User      @relation(fields: [userId], references: [id])
 
-  categoryId  String    @db.ObjectId
-  category    Category  @relation(fields: [categoryId], references: [id])
+  // categoryId  String    @db.ObjectId
+  // category    Category  @relation(fields: [categoryId], references: [id])
   
-  reviews     Review[]
-  orderItems  OrderItem[]
+  // reviews     Review[]
+  // orderItems  OrderItem[]
 
-  @@index([name])
+  // @@index([name])
+  // @@index([categoryId])
 }
 
 enum OrderStatus {
@@ -98,12 +102,14 @@ model Order {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  userId      String     @db.ObjectId
-  user        User       @relation(fields: [userId], references: [id])
+  // userId      String     @db.ObjectId
+  // user        User       @relation(fields: [userId], references: [id])
   
-  orderItems  OrderItem[]
+  // orderItems  OrderItem[]
 
-  @@index([status])
+  // @@index([status])
+  // @@index([userId])
+  // @@index([userId, status])
 }
 
 model OrderItem {
@@ -111,11 +117,14 @@ model OrderItem {
   quantity    Int
   price       Float
 
-  orderId     String     @db.ObjectId
-  order       Order      @relation(fields: [orderId], references: [id])
+  // orderId     String     @db.ObjectId
+  // order       Order      @relation(fields: [orderId], references: [id])
 
-  productId   String     @db.ObjectId
-  product     Product    @relation(fields: [productId], references: [id])
+  // productId   String     @db.ObjectId
+  // product     Product    @relation(fields: [productId], references: [id])
+
+  // @@index([orderId])
+  // @@index([productId])
 }
 
 model Review {
@@ -124,11 +133,14 @@ model Review {
   comment     String?
   createdAt   DateTime   @default(now())
 
-  userId      String     @db.ObjectId
-  user        User       @relation(fields: [userId], references: [id])
+  // userId      String     @db.ObjectId
+  // user        User       @relation(fields: [userId], references: [id])
 
-  productId   String     @db.ObjectId
-  product     Product    @relation(fields: [productId], references: [id])
+  // productId   String     @db.ObjectId
+  // product     Product    @relation(fields: [productId], references: [id])
+
+  // @@index([userId])
+  // @@index([productId])
 }
 
 model Category {
@@ -137,5 +149,7 @@ model Category {
   description String?
   createdAt   DateTime   @default(now())
 
-  products    Product[]
+  // products    Product[]
+
+  // @@index([name])
 }
