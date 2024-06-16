@@ -1,65 +1,64 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { User } from './user.model';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto, UpdateUserDto } from 'src/layers/user/user.dto';
 
 @Injectable()
 export class UserService {
-  private readonly logger = new Logger(UserService.name);
-
   constructor(private readonly prisma: PrismaService) {}
 
   async createUser(data: CreateUserDto): Promise<User> {
-    this.logger.log(`Creating user: ${JSON.stringify(data)}`);
+    const checkUser = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (checkUser) {
+      throw new Error('This email is already in use');
+    }
 
     try {
       return this.prisma.user.create({ data });
     } catch (error) {
-      throw new Error(`Failed to create user: ${error.message}`);
+      throw new Error('Failed to create user');
     }
   }
 
   async getAllUsers(): Promise<User[]> {
-    this.logger.log(`Getting all users`);
-
     return this.prisma.user.findMany();
   }
 
   async getUserById(id: string): Promise<User> {
-    this.logger.log(`Getting user by id: ${id}`);
-    const user = await this.prisma.user.findUnique({ where: { id } });
+    const checkUser = await this.prisma.user.findUnique({ where: { id } });
 
-    if (!user) {
+    if (!checkUser) {
       throw new NotFoundException('User not found');
     }
-    return user;
+    return checkUser;
   }
 
   async updateUser(id: string, user: UpdateUserDto): Promise<User> {
-    this.logger.log(`Updating user by id: ${id}`);
     const checkUser = await this.prisma.user.findUnique({ where: { id } });
+
     if (!checkUser) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
 
-    return this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: {
         id,
       },
       data: user,
     });
+    return updatedUser;
   }
 
   async deleteUser(id: string): Promise<void> {
-    this.logger.log(`Deleting user by id: ${id}`);
-    try {
-      await this.prisma.user.delete({
-        where: {
-          id,
-        },
-      });
-    } catch (error) {
+    const checkUser = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!checkUser) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
+
+    await this.prisma.user.delete({ where: { id } });
   }
 }
