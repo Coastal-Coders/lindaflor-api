@@ -32,10 +32,10 @@ model User {
   updatedAt DateTime  @updatedAt
 
   role      UserRoles @default(GUEST)
-  // products  Product[]
-  // orders    Order[]
-  // reviews   Review[]
-  // addresses Address[]
+  products  Product[]
+  orders    Order[]
+  reviews   Review[]
+  addresses Address[]
 
   @@index([role])
 }
@@ -50,10 +50,10 @@ model Address {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  // userId      String     @db.ObjectId
-  // user        User       @relation(fields: [userId], references: [id])
+  userId      String     @db.ObjectId
+  user        User       @relation(fields: [userId], references: [id])
 
-  // @@index([userId])
+  @@index([userId])
 }
 
 enum ProductSize {
@@ -75,17 +75,16 @@ model Product {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  // userId      String    @db.ObjectId
-  // user        User      @relation(fields: [userId], references: [id])
+  userId      String    @db.ObjectId
+  user        User      @relation(fields: [userId], references: [id])
 
-  // categoryId  String    @db.ObjectId
-  // category    Category  @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [name])
   
-  // reviews     Review[]
-  // orderItems  OrderItem[]
+  reviews     Review[]
+  orderItems  OrderItem[]
 
-  // @@index([name])
-  // @@index([categoryId])
+  @@index([name])
 }
 
 enum OrderStatus {
@@ -102,54 +101,54 @@ model Order {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  // userId      String     @db.ObjectId
-  // user        User       @relation(fields: [userId], references: [id])
+  userId      String     @db.ObjectId
+  user        User       @relation(fields: [userId], references: [id])
   
-  // orderItems  OrderItem[]
+  orderItems  OrderItem[]
 
-  // @@index([status])
-  // @@index([userId])
-  // @@index([userId, status])
+  @@index([status])
+  @@index([userId])
+  @@index([userId, status])
 }
 
 model OrderItem {
   id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  product     Product    @relation(fields: [id], references: [id])
+  
   quantity    Int
   price       Float
 
-  // orderId     String     @db.ObjectId
-  // order       Order      @relation(fields: [orderId], references: [id])
+  orderId     String     @db.ObjectId
+  order       Order      @relation(fields: [orderId], references: [id])
 
-  // productId   String     @db.ObjectId
-  // product     Product    @relation(fields: [productId], references: [id])
 
-  // @@index([orderId])
-  // @@index([productId])
+  @@index([orderId])
+  @@index([id])
 }
 
 model Review {
   id          String     @id @default(auto()) @map("_id") @db.ObjectId
-  rating      Int
+  rating      Int         
   comment     String?
   createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  // userId      String     @db.ObjectId
-  // user        User       @relation(fields: [userId], references: [id])
+  userId      String     @db.ObjectId
+  user        User       @relation(fields: [userId], references: [id])
 
-  // productId   String     @db.ObjectId
-  // product     Product    @relation(fields: [productId], references: [id])
+  productId   String     @db.ObjectId
+  product     Product    @relation(fields: [productId], references: [id])
 
-  // @@index([userId])
-  // @@index([productId])
+  @@index([userId])
+  @@index([productId])
 }
 
 model Category {
-  id          String     @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
+  name        String     @id @map("_id")
   description String?
   createdAt   DateTime   @default(now())
 
-  // products    Product[]
+  products    Product[]
 
-  // @@index([name])
+  @@index([name], name: "category_name_index")
 }
