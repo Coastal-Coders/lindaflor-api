@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
-import { UserModule } from './layers/user/user.module';
-import { AddressesModule } from './layers/adresses/addresses.module';
-import { CategoryModule } from './layers/category/category.module';
-import { ProductModule } from './layers/product/product.module';
-import { ReviewModule } from './layers/review/review.module';
+import { UserModule } from './modules/user/user.module';
+import { AddressesModule } from './modules/adresses/addresses.module';
+import { CategoryModule } from './modules/category/category.module';
+import { ProductModule } from './modules/product/product.module';
+import { ReviewModule } from './modules/review/review.module';
 
 @Module({
   imports: [
