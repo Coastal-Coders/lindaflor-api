@@ -1,10 +1,10 @@
-import { PrismaService } from './prisma.service';
+// import { PrismaService } from './prisma.service';
 
-let prisma: PrismaService;
+// let prisma: PrismaService;
 
-export const getPrismaService = (): PrismaService => {
-  if (!prisma) {
-    prisma = new PrismaService();
-  }
-  return prisma;
-};
+// export const getPrismaService = (): PrismaService => {
+//   if (!prisma) {
+//     prisma = new PrismaService();
+//   }
+//   return prisma;
+// };
