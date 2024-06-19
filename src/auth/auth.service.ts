@@ -1,10 +1,10 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { AuthDto } from './dtos';
-import * as bcrypt from 'bcrypt';
-import { Tokens } from './types';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import * as bcrypt from 'bcrypt';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { AuthDto } from './dtos';
+import { JwtPayload, Tokens } from './types';
 
 @Injectable()
 export class AuthService {
@@ -108,15 +108,20 @@ export class AuthService {
   }
 
   async getTokens(userId: string, email: string): Promise<Tokens> {
+    const jwtPayload: JwtPayload = {
+      sub: userId,
+      email: email,
+    };
+
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(
-        { sub: userId, email },
-        { secret: process.env.ACESSTOKEN_SECRET, expiresIn: '15m' }
-      ),
-      this.jwtService.signAsync(
-        { sub: userId, email },
-        { secret: process.env.REFRESHTOKEN_SECRET, expiresIn: '7h' }
-      ),
+      this.jwtService.signAsync(jwtPayload, {
+        secret: process.env.ACCESSTOKEN_SECRET,
+        expiresIn: '15m',
+      }),
+      this.jwtService.signAsync(jwtPayload, {
+        secret: process.env.REFRESHTOKEN_SECRET,
+        expiresIn: '1d',
+      }),
     ]);
     return { accessToken, refreshToken };
   }
