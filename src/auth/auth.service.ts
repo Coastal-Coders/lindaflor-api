@@ -71,7 +71,7 @@ export class AuthService {
     }
   }
 
-  async refreshTokens(userId: string, refreshToken: string) {
+  async refreshTokens(userId: string, refreshToken: string): Promise<Tokens> {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
@@ -98,7 +98,7 @@ export class AuthService {
     return bcrypt.hashSync(data, 10);
   }
 
-  async updateRefreshTokenHash(userId: string, refreshToken: string) {
+  async updateRefreshTokenHash(userId: string, refreshToken: string): Promise<void> {
     const hash = await this.hashData(refreshToken);
 
     await this.prisma.user.update({
