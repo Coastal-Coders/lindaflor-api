@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AuthDto } from './dtos';
+import { SignInDTO, SignUpDTO } from './dtos';
 import { JwtPayload, Tokens } from './types';
 
 @Injectable()
@@ -13,12 +13,14 @@ export class AuthService {
     private jwtService: JwtService
   ) {}
 
-  async signupLocal(dto: AuthDto): Promise<Tokens> {
+  async signupLocal(dto: SignUpDTO): Promise<Tokens> {
     const hash = await this.hashData(dto.password);
 
     const newUser = await this.prisma.user
       .create({
         data: {
+          name: dto.name,
+          surname: dto.surname,
           email: dto.email,
           hash,
         },
@@ -39,7 +41,7 @@ export class AuthService {
     return tokens;
   }
 
-  async signinLocal(dto: AuthDto): Promise<Tokens> {
+  async signinLocal(dto: SignInDTO): Promise<Tokens> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -67,7 +69,7 @@ export class AuthService {
       });
       return true;
     } catch (error) {
-      console.error('Error during logout:', error);
+      throw new ForbiddenException('Access denied');
     }
   }
 
@@ -89,7 +91,6 @@ export class AuthService {
 
       return tokens;
     } catch (error) {
-      console.error('Error during token refresh:', error);
       throw new ForbiddenException('Access denied');
     }
   }

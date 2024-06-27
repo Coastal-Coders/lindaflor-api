@@ -5,7 +5,12 @@ import { AuthService } from './auth.service';
 import { RefreshTokenStrategy, AccessTokenStrategy } from './strategies';
 
 @Module({
-  imports: [JwtModule.register({})],
+  imports: [
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '60m' },
+    }),
+  ],
   controllers: [AuthController],
   providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy],
 })

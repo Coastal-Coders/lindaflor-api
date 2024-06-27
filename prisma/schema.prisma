@@ -13,6 +13,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   email              String    @unique
+  name               String?
+  surname            String?
   hash               String
   hashedRefreshToken String?
   role               UserRoles @default(GUEST)
