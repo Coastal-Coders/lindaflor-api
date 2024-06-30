@@ -1,7 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as bcrypt from 'bcrypt';
+import { Response } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SignInDTO, SignUpDTO } from './dtos';
 import { JwtPayload, Tokens } from './types';
@@ -16,82 +17,51 @@ export class AuthService {
   async signupLocal(dto: SignUpDTO): Promise<Tokens> {
     const hash = await this.hashData(dto.password);
 
-    const newUser = await this.prisma.user
-      .create({
+    try {
+      const newUser = await this.prisma.user.create({
         data: {
           name: dto.name,
           surname: dto.surname,
           email: dto.email,
           hash,
         },
-      })
-      .catch((error) => {
-        if (error instanceof PrismaClientKnownRequestError) {
-          if (error.code === 'P2002') {
-            throw new ForbiddenException('Credentials incorrect');
-          }
-        }
-        throw error;
       });
-
-    const tokens = await this.getTokens(newUser.id, dto.email);
-
-    await this.updateRefreshTokenHash(newUser.id, tokens.refreshToken);
-
-    return tokens;
+      const tokens = await this.getTokens(newUser.id, dto.email);
+      return tokens;
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ForbiddenException('Email already exists');
+        }
+      }
+      throw new InternalServerErrorException('Error creating user');
+    }
   }
 
-  async signinLocal(dto: SignInDTO): Promise<Tokens> {
+  async signinLocal(dto: SignInDTO, res: Response): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
 
-    if (!user) throw new ForbiddenException('Access denied');
+    if (!user) throw new ForbiddenException('Invalid creadentials');
 
     const passwordMatches = await bcrypt.compare(dto.password, user.hash);
-    if (!passwordMatches) throw new ForbiddenException('Access denied');
+    if (!passwordMatches) throw new ForbiddenException('Invalid creadentials');
 
     const tokens = await this.getTokens(user.id, dto.email);
 
-    await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
+    this.setCookies(res, tokens);
 
-    return tokens;
+    res.status(200).send({ message: 'Login successful' });
   }
 
-  async logout(userId: string): Promise<boolean> {
+  async logout(_userId: string, res: Response): Promise<void> {
     try {
-      await this.prisma.user.updateMany({
-        where: {
-          id: userId,
-          hashedRefreshToken: { not: null },
-        },
-        data: { hashedRefreshToken: null },
-      });
-      return true;
+      this.clearCookies(res);
+
+      res.status(200).send({ message: 'Logout successful' });
     } catch (error) {
-      throw new ForbiddenException('Access denied');
-    }
-  }
-
-  async refreshTokens(userId: string, refreshToken: string): Promise<Tokens> {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-      });
-
-      if (!user || !user.hashedRefreshToken) throw new ForbiddenException('Access denied');
-
-      const refreshTokenMatches = await bcrypt.compare(refreshToken, user.hashedRefreshToken);
-
-      if (!refreshTokenMatches) throw new ForbiddenException('Access denied');
-
-      const tokens = await this.getTokens(user.id, user.email);
-
-      await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
-
-      return tokens;
-    } catch (error) {
-      throw new ForbiddenException('Access denied');
+      throw new InternalServerErrorException('Error logging out');
     }
   }
 
@@ -99,13 +69,28 @@ export class AuthService {
     return bcrypt.hashSync(data, 10);
   }
 
-  async updateRefreshTokenHash(userId: string, refreshToken: string): Promise<void> {
-    const hash = await this.hashData(refreshToken);
+  async refreshTokens(userId: string, refreshToken: string, res: Response): Promise<void> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
 
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { hashedRefreshToken: hash },
-    });
+      if (!user) throw new ForbiddenException('User not found');
+
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: process.env.REFRESHTOKEN_SECRET,
+      });
+
+      if (user.id !== payload.sub) throw new ForbiddenException('Invalid token');
+
+      const tokens = await this.getTokens(user.id, user.email);
+
+      this.setCookies(res, tokens);
+
+      res.send({ message: 'Tokens refreshed' });
+    } catch (error) {
+      throw new ForbiddenException('Error refreshing tokens');
+    }
   }
 
   async getTokens(userId: string, email: string): Promise<Tokens> {
@@ -125,5 +110,33 @@ export class AuthService {
       }),
     ]);
     return { accessToken, refreshToken };
+  }
+
+  private setCookies(res: Response, tokens: Tokens): void {
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict' as const,
+    };
+
+    res.cookie('accessToken', tokens.accessToken, {
+      ...cookieOptions,
+      expires: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+    });
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      ...cookieOptions,
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+    });
+  }
+
+  private clearCookies(res: Response): void {
+    const cookieOptions = {
+      httpOnly: true,
+      expires: new Date(0),
+    };
+
+    res.clearCookie('accessToken', cookieOptions);
+    res.clearCookie('refreshToken', cookieOptions);
   }
 }

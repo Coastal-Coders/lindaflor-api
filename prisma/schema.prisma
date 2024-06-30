@@ -16,7 +16,6 @@ model User {
   name               String?
   surname            String?
   hash               String
-  hashedRefreshToken String?
   role               UserRoles @default(GUEST)
   Product            Product[]
 
