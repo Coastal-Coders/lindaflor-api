@@ -26,7 +26,7 @@ export class AuthService {
           hash,
         },
       });
-      const tokens = await this.getTokens(newUser.id, dto.email);
+      const tokens = await this.createTokens(newUser.id, dto.email);
       return tokens;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
@@ -48,7 +48,7 @@ export class AuthService {
     const passwordMatches = await bcrypt.compare(dto.password, user.hash);
     if (!passwordMatches) throw new ForbiddenException('Invalid creadentials');
 
-    const tokens = await this.getTokens(user.id, dto.email);
+    const tokens = await this.createTokens(user.id, dto.email);
 
     this.setCookies(res, tokens);
 
@@ -83,7 +83,7 @@ export class AuthService {
 
       if (user.id !== payload.sub) throw new ForbiddenException('Invalid token');
 
-      const tokens = await this.getTokens(user.id, user.email);
+      const tokens = await this.createTokens(user.id, user.email);
 
       this.setCookies(res, tokens);
 
@@ -93,7 +93,7 @@ export class AuthService {
     }
   }
 
-  async getTokens(userId: string, email: string): Promise<Tokens> {
+  async createTokens(userId: string, email: string): Promise<Tokens> {
     const jwtPayload: JwtPayload = {
       sub: userId,
       email: email,
