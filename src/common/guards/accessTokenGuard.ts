@@ -13,6 +13,7 @@ export class AccessTokenGuard extends AuthGuard('jwt') {
       context.getHandler(),
       context.getClass(),
     ]);
+    console.log(isPublic);
 
     if (isPublic) {
       return true;

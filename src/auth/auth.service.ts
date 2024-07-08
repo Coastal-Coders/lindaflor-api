@@ -49,7 +49,7 @@ export class AuthService {
     if (!passwordMatches) throw new ForbiddenException('Invalid creadentials');
 
     const tokens = await this.createTokens(user.id, dto.email);
-
+    console.log(tokens);
     this.setCookies(res, tokens);
 
     res.status(200).send({ message: 'Login successful' });
@@ -115,8 +115,7 @@ export class AuthService {
   private setCookies(res: Response, tokens: Tokens): void {
     const cookieOptions = {
       httpOnly: true,
-      secure: true,
-      sameSite: 'strict' as const,
+      secure: false,
     };
 
     res.cookie('accessToken', tokens.accessToken, {

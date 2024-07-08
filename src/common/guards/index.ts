@@ -1,2 +1,2 @@
 export * from './accessTokenGuard';
-export * from './refreshTokenGuard';
+export * from './refreshToken.guard';
