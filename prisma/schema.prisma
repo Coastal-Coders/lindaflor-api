@@ -12,12 +12,13 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  email              String    @unique
-  name               String?
-  surname            String?
-  hash               String
-  role               UserRoles @default(GUEST)
-  Product            Product[]
+  email   String    @unique
+  name    String?
+  surname String?
+  hash    String
+  role    UserRoles @default(CUSTOMER)
+
+  Product Product[]
 
   @@map("users")
 }
@@ -25,10 +26,7 @@ model User {
 enum UserRoles {
   ADMIN
   MANAGER
-  STAFF
-  VENDOR
   CUSTOMER
-  GUEST
 }
 
 model Product {

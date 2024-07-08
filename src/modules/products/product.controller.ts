@@ -4,6 +4,8 @@ import { AccessTokenGuard } from 'src/common/guards';
 import { createProductDto, updateProductDto } from './dto';
 import { ProductService } from './product.service';
 import { Product } from './types';
+import { Role } from 'src/common/roles/roles.enum';
+import { Roles } from 'src/common/roles/roles.decorator';
 
 @Controller('products')
 export class ProductController {
@@ -23,6 +25,7 @@ export class ProductController {
 
   @UseGuards(AccessTokenGuard)
   @Post()
+  @Roles(Role.ADMIN)
   async createProduct(
     @GetCurrentUserId() userId: string,
     @Body() dto: createProductDto
