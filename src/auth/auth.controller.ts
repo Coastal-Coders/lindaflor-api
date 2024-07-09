@@ -3,8 +3,7 @@ import { Response } from 'express';
 import { GetCurrentUserId, GetCurrentUser, Public } from 'src/common/decorators';
 import { AccessTokenGuard, RefreshTokenGuard } from 'src/common/guards';
 import { AuthService } from './auth.service';
-import { SignUpDTO } from './dtos';
-import { SignInDTO } from './dtos/SignIn.dto';
+import { SignInDTO, SignUpDTO } from './dto';
 import { Tokens } from './types';
 
 @Controller('auth')
@@ -15,21 +14,21 @@ export class AuthController {
   @Post('local/signup')
   @HttpCode(HttpStatus.CREATED)
   signupLocal(@Body() dto: SignUpDTO): Promise<Tokens> {
-    return this.authService.signupLocal(dto);
+    return this.authService.signUpLocal(dto);
   }
 
   @Public()
   @Post('local/signin')
   @HttpCode(HttpStatus.OK)
-  async signinLocal(@Body() dto: SignInDTO, @Res() res: Response): Promise<void> {
-    await this.authService.signinLocal(dto, res);
+  async signInLocal(@Body() dto: SignInDTO, @Res() res: Response): Promise<void> {
+    await this.authService.signInLocal(dto, res);
   }
 
   @Post('logout')
   @UseGuards(AccessTokenGuard)
   @HttpCode(HttpStatus.OK)
   async logout(@GetCurrentUserId() userId: string, @Res() res: Response): Promise<void> {
-    await this.authService.logout(userId, res);
+    await this.authService.logOut(userId, res);
   }
 
   @Public()

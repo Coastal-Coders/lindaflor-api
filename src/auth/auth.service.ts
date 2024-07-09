@@ -1,10 +1,11 @@
 import { ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { UserRoles } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SignInDTO, SignUpDTO } from './dtos';
+import { SignInDTO, SignUpDTO } from './dto';
 import { JwtPayload, Tokens } from './types';
 
 @Injectable()
@@ -14,7 +15,7 @@ export class AuthService {
     private jwtService: JwtService
   ) {}
 
-  async signupLocal(dto: SignUpDTO): Promise<Tokens> {
+  async signUpLocal(dto: SignUpDTO): Promise<Tokens> {
     const hash = await this.hashData(dto.password);
 
     try {
@@ -24,10 +25,11 @@ export class AuthService {
           surname: dto.surname,
           email: dto.email,
           hash,
+          role: dto.role || [UserRoles.CUSTOMER],
         },
       });
-      // TODO: Roles add on DB
-      const tokens = await this.createTokens(newUser.id, dto.email, [0]);
+
+      const tokens = await this.createTokens(newUser.id, dto.email, newUser.role);
       return tokens;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
@@ -39,24 +41,24 @@ export class AuthService {
     }
   }
 
-  async signinLocal(dto: SignInDTO, res: Response): Promise<void> {
+  async signInLocal(dto: SignInDTO, res: Response): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
 
-    if (!user) throw new ForbiddenException('Invalid creadentials');
+    if (!user) throw new ForbiddenException('Invalid credentials');
 
     const passwordMatches = await bcrypt.compare(dto.password, user.hash);
-    if (!passwordMatches) throw new ForbiddenException('Invalid creadentials');
-    // TODO: Roles get from DB
-    const tokens = await this.createTokens(user.id, dto.email, [0]);
-    console.log(tokens);
+    if (!passwordMatches) throw new ForbiddenException('Invalid credentials');
+
+    const tokens = await this.createTokens(user.id, dto.email, user.role);
+
     this.setCookies(res, tokens);
 
     res.status(200).send({ message: 'Login successful' });
   }
 
-  async logout(_userId: string, res: Response): Promise<void> {
+  async logOut(_userId: string, res: Response): Promise<void> {
     try {
       this.clearCookies(res);
 
@@ -83,8 +85,8 @@ export class AuthService {
       });
 
       if (user.id !== payload.sub) throw new ForbiddenException('Invalid token');
-      // TODO: Roles get from DB
-      const tokens = await this.createTokens(user.id, user.email, [0]);
+
+      const tokens = await this.createTokens(user.id, user.email, user.role);
 
       this.setCookies(res, tokens);
 
@@ -94,7 +96,7 @@ export class AuthService {
     }
   }
 
-  async createTokens(userId: string, email: string, rolesId: number[]): Promise<Tokens> {
+  async createTokens(userId: string, email: string, rolesId: UserRoles[]): Promise<Tokens> {
     const jwtPayload: JwtPayload = {
       sub: userId,
       email: email,
@@ -104,7 +106,7 @@ export class AuthService {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(jwtPayload, {
         secret: process.env.ACCESSTOKEN_SECRET,
-        expiresIn: '15m',
+        expiresIn: '1hr',
       }),
       this.jwtService.signAsync(jwtPayload, {
         secret: process.env.REFRESHTOKEN_SECRET,
@@ -122,7 +124,7 @@ export class AuthService {
 
     res.cookie('accessToken', tokens.accessToken, {
       ...cookieOptions,
-      expires: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+      expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // 1 hour
     });
 
     res.cookie('refreshToken', tokens.refreshToken, {

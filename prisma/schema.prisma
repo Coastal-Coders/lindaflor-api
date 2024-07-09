@@ -16,8 +16,7 @@ model User {
   name    String?
   surname String?
   hash    String
-  role    UserRoles @default(CUSTOMER)
-
+  role    UserRoles[]
   Product Product[]
 
   @@map("users")

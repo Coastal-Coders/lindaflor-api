@@ -7,7 +7,7 @@ import { Product } from './types/Product';
 export class ProductService {
   constructor(private prisma: PrismaService) {}
 
-  async getProduct(id: string) {
+  async getProduct(id: string): Promise<Product | null> {
     return this.prisma.product.findUnique({
       where: { id },
     });
