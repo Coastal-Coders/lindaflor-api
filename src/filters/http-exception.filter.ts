@@ -11,8 +11,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     let message = exception.message;
 
-    // Defina mensagens padrão para diferentes tipos de status HTTP
     switch (status) {
+      case HttpStatus.OK:
+        message = 'Solicitação realizada com sucesso';
+        break;
+      case HttpStatus.CREATED:
+        message = 'Criado com sucesso';
+        break;
+      case HttpStatus.ACCEPTED:
+        message = 'Requisição aceita';
+        break;
       case HttpStatus.BAD_REQUEST:
         message = 'Requisição inválida';
         break;
