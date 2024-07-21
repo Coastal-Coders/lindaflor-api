@@ -119,7 +119,7 @@ export class AuthService {
   private setCookies(res: Response, tokens: Tokens): void {
     const cookieOptions = {
       httpOnly: true,
-      secure: false,
+      secure: true,
     };
 
     res.cookie('accessToken', tokens.accessToken, {
