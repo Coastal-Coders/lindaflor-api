@@ -25,7 +25,7 @@ export class AuthService {
           surname: dto.surname,
           email: dto.email,
           hash,
-          role: dto.role || [UserRoles.CUSTOMER],
+          role: dto.role ?? [UserRoles.CUSTOMER],
         },
       });
 
@@ -72,6 +72,26 @@ export class AuthService {
     return bcrypt.hashSync(data, 10);
   }
 
+  async createTokens(userId: string, email: string, rolesId: UserRoles[]): Promise<Tokens> {
+    const jwtPayload: JwtPayload = {
+      sub: userId,
+      email: email,
+      roles: rolesId,
+    };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(jwtPayload, {
+        secret: process.env.ACCESSTOKEN_SECRET,
+        expiresIn: '1hr',
+      }),
+      this.jwtService.signAsync(jwtPayload, {
+        secret: process.env.REFRESHTOKEN_SECRET,
+        expiresIn: '1d',
+      }),
+    ]);
+    return { accessToken, refreshToken };
+  }
+
   async refreshTokens(userId: string, refreshToken: string, res: Response): Promise<void> {
     try {
       const user = await this.prisma.user.findUnique({
@@ -94,26 +114,6 @@ export class AuthService {
     } catch (error) {
       throw new ForbiddenException('Error refreshing tokens');
     }
-  }
-
-  async createTokens(userId: string, email: string, rolesId: UserRoles[]): Promise<Tokens> {
-    const jwtPayload: JwtPayload = {
-      sub: userId,
-      email: email,
-      roles: rolesId,
-    };
-
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(jwtPayload, {
-        secret: process.env.ACCESSTOKEN_SECRET,
-        expiresIn: '1hr',
-      }),
-      this.jwtService.signAsync(jwtPayload, {
-        secret: process.env.REFRESHTOKEN_SECRET,
-        expiresIn: '1d',
-      }),
-    ]);
-    return { accessToken, refreshToken };
   }
 
   private setCookies(res: Response, tokens: Tokens): void {

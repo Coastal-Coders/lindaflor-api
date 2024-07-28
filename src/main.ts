@@ -15,8 +15,8 @@ async function bootstrap() {
     credentials: true,
   });
   app.use(cookieParser());
-
-  app.useGlobalPipes(new ValidationPipe());
+  app.setGlobalPrefix('api/v1');
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalFilters(new HttpExceptionFilter());
 
   app.use(
@@ -41,7 +41,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = 3001;
+  const port = process.env.PORT;
+
   await app.listen(port, () => {
     console.log(`Listening at http://localhost:${port}`);
   });
