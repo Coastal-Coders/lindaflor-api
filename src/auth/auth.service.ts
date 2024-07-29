@@ -25,7 +25,7 @@ export class AuthService {
           surname: dto.surname,
           email: dto.email,
           hash,
-          role: dto.role ?? [UserRoles.CUSTOMER],
+          role: [UserRoles.CUSTOMER],
         },
       });
 
