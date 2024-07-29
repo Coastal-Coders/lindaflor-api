@@ -8,13 +8,21 @@ export class ProductService {
   constructor(private prisma: PrismaService) {}
 
   async getProduct(id: string): Promise<Product | null> {
-    return this.prisma.product.findUnique({
+    const product = await this.prisma.product.findUnique({
       where: { id },
     });
+
+    if (!product) throw new NotFoundException();
+
+    return product;
   }
 
   async getAllProducts(): Promise<Product[]> {
-    return this.prisma.product.findMany();
+    const products = await this.prisma.product.findMany();
+
+    if (products.length === 0) throw new NotFoundException();
+
+    return products;
   }
 
   async createProduct(data: createProductDto & { userId: string }): Promise<Product> {
@@ -26,7 +34,7 @@ export class ProductService {
   async updateProduct(id: string, data: updateProductDto): Promise<Product> {
     const checkProduct = await this.getProduct(id);
 
-    if (!checkProduct) throw new NotFoundException(`Product with id ${id} not found`);
+    if (!checkProduct) throw new NotFoundException();
 
     return this.prisma.product.update({
       where: { id },
@@ -37,7 +45,7 @@ export class ProductService {
   async deleteProduct(id: string): Promise<void> {
     const checkProduct = await this.getProduct(id);
 
-    if (!checkProduct) throw new NotFoundException(`Product with id ${id} not found`);
+    if (!checkProduct) throw new NotFoundException();
 
     await this.prisma.product.delete({
       where: { id },
