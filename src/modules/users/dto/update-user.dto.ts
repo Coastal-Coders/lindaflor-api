@@ -1,18 +1,21 @@
-import type { UserRoles } from '@prisma/client';
-import { IsArray, IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsDate, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class UpdateUserDTO {
   @IsNotEmpty()
+  @IsDate()
+  updatedAt: Date;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
   name?: string;
 
+  @IsOptional()
+  @IsString()
   @IsNotEmpty()
   surname?: string;
 
   @IsOptional()
   @IsEmail()
   email?: string;
-
-  @IsOptional()
-  @IsArray()
-  role?: UserRoles[];
 }

@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import type { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import type { FindUserDTO, UpdateUserDTO } from './dto';
 import type { GetUserPermissionsDTO } from './dto/get-user-permissions.dto';
-import type { User } from './types';
 
 @Injectable()
 export class UserService {
@@ -14,7 +14,7 @@ export class UserService {
 
     if (findAll.length === 0) throw new NotFoundException();
 
-    return findAll.map((user) => ({
+    const response = findAll.map((user) => ({
       id: user.id,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
@@ -22,6 +22,8 @@ export class UserService {
       surname: user.surname,
       email: user.email,
     }));
+
+    return response;
   }
 
   async findOne(userId: string): Promise<FindUserDTO | null> {
@@ -44,24 +46,58 @@ export class UserService {
   }
 
   // TODO: Ensure there's a way to create users directly if needed.
-  async createUser() {}
+  // FIXME: Error: getaddrinfo ENOTFOUND create
+  // async createUser(createUserDto: SignUpDTO): Promise<FindUserDTO> {
+  //   const { name, surname, email, password } = createUserDto;
 
-  async updateUser(userId: string, data: UpdateUserDTO) {
-    // TODO: Ensure user can only update their own data, and only admin can update all users.
-    // FIXME: Throw error if try to update a field that is not allowed to be updated in UpdateUserDto.
+  //   const hash = await this.hashData(password);
+
+  //   const newUser = await this.prisma.user.create({
+  //     data: {
+  //       name,
+  //       surname,
+  //       email,
+  //       hash,
+  //     },
+  //   });
+
+  //   return {
+  //     id: newUser.id,
+  //     createdAt: newUser.createdAt,
+  //     updatedAt: newUser.updatedAt,
+  //     name: newUser.name,
+  //     surname: newUser.surname,
+  //     email: newUser.email,
+  //   };
+  // }
+
+  async updateUser(userId: string, id: string, data: UpdateUserDTO): Promise<User> {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: id },
     });
 
     if (!user) throw new NotFoundException();
+    if (userId !== id) throw new ForbiddenException('You cannot update another user');
 
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: { ...data },
+    const updatedUser = await this.prisma.user.update({
+      where: { id: id },
+      data: {
+        updatedAt: new Date(),
+        name: data.name,
+        surname: data.surname,
+        email: data.email,
+      },
     });
+
+    return updatedUser;
   }
 
   // FIXME: User that have a product registered cannot be deleted.
+  // Invalid `prisma.user.delete()` invocation:
+  // The change you are trying to make would violate the required relation 'ProductToUser' between the `Product` and `User` models.
+  // PrismaClientKnownRequestError:
+  // Invalid `prisma.user.delete()` invocation:
+  // The change you are trying to make would violate the required relation 'ProductToUser' between the `Product` and `User` models.
   async deleteUser(userId: string): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -92,6 +128,8 @@ export class UserService {
 
   // FIXME: 400 Bad Request
   async changePassword(userId: string, newHash: string): Promise<User> {
+    console.log('Changing password user with ID:', userId);
+    console.log('Password is being hashed ?:', newHash);
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -99,13 +137,20 @@ export class UserService {
     if (!user) throw new NotFoundException();
 
     const hash = await this.hashData(newHash);
+    console.log('hash function:', hash);
 
-    return this.prisma.user.update({
+    const updatedUser = this.prisma.user.update({
       where: { id: userId },
       data: {
         hash,
       },
+      include: {
+        Product: true,
+      },
     });
+
+    console.log('User updated: ', updatedUser);
+    return updatedUser;
   }
 
   // TODO: Functionality to handle password resets, through email.

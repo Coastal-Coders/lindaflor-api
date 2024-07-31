@@ -1,17 +1,8 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  NotFoundException,
-  Param,
-  Patch,
-  UseGuards,
-} from '@nestjs/common';
-import { UserRoles } from '@prisma/client';
-import { Roles } from 'src/common/decorators';
+import { Body, Controller, Delete, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import { UserRoles, type User } from '@prisma/client';
+import { GetCurrentUserId, Roles } from 'src/common/decorators';
 import { AccessTokenGuard, RefreshTokenGuard } from 'src/common/guards';
-import type { ChangePasswordDTO, FindUserDTO, UpdateUserDTO } from './dto';
+import type { ChangePasswordDTO, FindUserDTO } from './dto';
 import type { GetUserPermissionsDTO } from './dto/get-user-permissions.dto';
 import { UserService } from './user.service';
 
@@ -33,15 +24,21 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
-  async createUser() {}
+  // @Post()
+  // @UseGuards(AccessTokenGuard)
+  // @Roles(UserRoles.ADMIN)
+  // async createUser(@Body() createUserDto: SignUpDTO): Promise<FindUserDTO> {
+  //   return this.userService.createUser(createUserDto);
+  // }
 
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(RefreshTokenGuard)
   @Patch(':id')
-  async updateUser(@Param('id') id: string, @Body() data: UpdateUserDTO) {
-    const user = await this.userService.findOne(id);
-
-    if (!user) throw new NotFoundException();
-    return this.userService.updateUser(id, data);
+  async updateUser(
+    @GetCurrentUserId() userId: string,
+    @Param('id') id: string,
+    @Body() data: User
+  ): Promise<User> {
+    return this.userService.updateUser(userId, id, data);
   }
 
   @UseGuards(AccessTokenGuard)
