@@ -1,9 +1,16 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import type { User } from '@prisma/client';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { UserRoles, type User } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as bcrypt from 'bcrypt';
+import type { Response } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
-import type { FindUserDTO, UpdateUserDTO } from './dto';
-import type { GetUserPermissionsDTO } from './dto/get-user-permissions.dto';
+import type { CreateUserDTO, FindUserDTO, GetUserPermissionsDTO, UpdateUserDTO } from './dto';
 
 @Injectable()
 export class UserService {
@@ -45,42 +52,39 @@ export class UserService {
     return response;
   }
 
-  // TODO: Ensure there's a way to create users directly if needed.
-  // FIXME: Error: getaddrinfo ENOTFOUND create
-  // async createUser(createUserDto: SignUpDTO): Promise<FindUserDTO> {
-  //   const { name, surname, email, password } = createUserDto;
+  async createUser(dto: CreateUserDTO): Promise<User> {
+    const hash = await this.hashData(dto.password);
 
-  //   const hash = await this.hashData(password);
+    try {
+      const newUser = await this.prisma.user.create({
+        data: {
+          name: dto.name,
+          surname: dto.surname,
+          email: dto.email,
+          hash,
+          role: dto.role ?? [UserRoles.CUSTOMER],
+        },
+      });
+      return newUser;
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ForbiddenException('Email already exists');
+        }
+      }
+      throw new InternalServerErrorException('Error creating user');
+    }
+  }
 
-  //   const newUser = await this.prisma.user.create({
-  //     data: {
-  //       name,
-  //       surname,
-  //       email,
-  //       hash,
-  //     },
-  //   });
-
-  //   return {
-  //     id: newUser.id,
-  //     createdAt: newUser.createdAt,
-  //     updatedAt: newUser.updatedAt,
-  //     name: newUser.name,
-  //     surname: newUser.surname,
-  //     email: newUser.email,
-  //   };
-  // }
-
-  async updateUser(userId: string, id: string, data: UpdateUserDTO): Promise<User> {
+  async updateUser(userId: string, data: UpdateUserDTO, res: Response) {
     const user = await this.prisma.user.findUnique({
-      where: { id: id },
+      where: { id: userId },
     });
 
-    if (!user) throw new NotFoundException();
-    if (userId !== id) throw new ForbiddenException('You cannot update another user');
+    if (!user) throw new NotFoundException('User not found');
 
-    const updatedUser = await this.prisma.user.update({
-      where: { id: id },
+    await this.prisma.user.update({
+      where: { id: userId },
       data: {
         updatedAt: new Date(),
         name: data.name,
@@ -89,16 +93,10 @@ export class UserService {
       },
     });
 
-    return updatedUser;
+    res.status(200).send({ message: 'User updated' });
   }
 
-  // FIXME: User that have a product registered cannot be deleted.
-  // Invalid `prisma.user.delete()` invocation:
-  // The change you are trying to make would violate the required relation 'ProductToUser' between the `Product` and `User` models.
-  // PrismaClientKnownRequestError:
-  // Invalid `prisma.user.delete()` invocation:
-  // The change you are trying to make would violate the required relation 'ProductToUser' between the `Product` and `User` models.
-  async deleteUser(userId: string): Promise<void> {
+  async deleteUser(userId: string, res: Response): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -108,6 +106,8 @@ export class UserService {
     await this.prisma.user.delete({
       where: { id: userId },
     });
+
+    res.status(200).send({ message: 'User deleted' });
   }
 
   async getUserPermissions(email: string): Promise<GetUserPermissionsDTO | null> {
@@ -126,31 +126,39 @@ export class UserService {
     return response;
   }
 
-  // FIXME: 400 Bad Request
-  async changePassword(userId: string, newHash: string): Promise<User> {
-    console.log('Changing password user with ID:', userId);
-    console.log('Password is being hashed ?:', newHash);
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+    res: Response
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
-
     if (!user) throw new NotFoundException();
 
-    const hash = await this.hashData(newHash);
-    console.log('hash function:', hash);
+    const passwordMatches = await bcrypt.compare(currentPassword, user.hash);
+    if (!passwordMatches) throw new ForbiddenException('Invalid password');
 
-    const updatedUser = this.prisma.user.update({
+    const comparePasswords = await bcrypt.compare(newPassword, user.hash);
+    if (comparePasswords)
+      throw new BadRequestException('New password cannot be the same as the current password');
+
+    const newHash = await this.hashData(newPassword);
+
+    await this.prisma.user.update({
       where: { id: userId },
       data: {
-        hash,
-      },
-      include: {
-        Product: true,
+        hash: newHash,
       },
     });
 
-    console.log('User updated: ', updatedUser);
-    return updatedUser;
+    res.status(200).send({ message: 'Password changed' });
+  }
+
+  // TODO: Functionality to change user role.
+  async changeUserRole() {
+    return null;
   }
 
   // TODO: Functionality to handle password resets, through email.
@@ -164,6 +172,8 @@ export class UserService {
   }
 
   async hashData(data: string): Promise<string> {
+    if (!data) throw new Error('Password is required for hashing');
+
     return bcrypt.hashSync(data, 10);
   }
 }
