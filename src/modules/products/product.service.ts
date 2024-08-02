@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import type { Product } from '@prisma/client';
+import type { Response } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { createProductDto, updateProductDto } from './dto';
-import { Product } from './types/Product';
+import type { createProductDTO } from './dto';
 
 @Injectable()
 export class ProductService {
@@ -25,13 +26,35 @@ export class ProductService {
     return products;
   }
 
-  async createProduct(data: createProductDto & { userId: string }): Promise<Product> {
-    return this.prisma.product.create({
-      data,
-    });
+  async createProduct(data: createProductDTO, userId: string) {
+    const { name, description, price, size, color, stock, image } = data;
+
+    console.log('Create product: ', data);
+
+    try {
+      const product = await this.prisma.product.create({
+        data: {
+          userId,
+          name,
+          description,
+          price,
+          size,
+          color,
+          stock,
+          image,
+        },
+      });
+
+      console.log('Product created: ', product);
+      return product;
+    } catch (error) {
+      console.log('Error creating product: ', error);
+      throw new Error(error);
+    }
   }
 
-  async updateProduct(id: string, data: updateProductDto): Promise<Product> {
+  async updateProduct(id: string, data: any): Promise<Product> {
+    //FIXME: type safety
     const checkProduct = await this.getProduct(id);
 
     if (!checkProduct) throw new NotFoundException();
@@ -42,7 +65,7 @@ export class ProductService {
     });
   }
 
-  async deleteProduct(id: string): Promise<void> {
+  async deleteProduct(id: string, res: Response): Promise<void> {
     const checkProduct = await this.getProduct(id);
 
     if (!checkProduct) throw new NotFoundException();
@@ -50,5 +73,7 @@ export class ProductService {
     await this.prisma.product.delete({
       where: { id },
     });
+
+    res.status(200).send({ message: 'Product deleted' });
   }
 }

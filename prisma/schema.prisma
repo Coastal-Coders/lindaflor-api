@@ -22,26 +22,37 @@ model User {
   @@map("users")
 }
 
-enum UserRoles {
-  ADMIN
-  MANAGER
-  CUSTOMER
-}
-
 model Product {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   userId String @db.ObjectId
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  stock       Int
+  price       Float
   name        String
   description String
-  price       Float
-  size        String
-  color       String
-  stock       Int
+  image       String[]
+  size        Sizes[]
+  color       Colors[]
 
   @@map("products")
+}
+
+enum UserRoles {
+  ADMIN
+  MANAGER
+  CUSTOMER
+}
+
+enum Sizes {
+  XG
+  G
+}
+
+enum Colors {
+  RED
+  BLUE
 }

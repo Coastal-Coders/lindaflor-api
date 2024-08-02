@@ -8,14 +8,15 @@ import {
   Param,
   Patch,
   Post,
+  Res,
   UseGuards,
 } from '@nestjs/common';
-import { UserRoles } from '@prisma/client';
+import { UserRoles, type Product } from '@prisma/client';
+import type { Response } from 'express';
 import { GetCurrentUserId, Public, Roles } from 'src/common/decorators';
 import { AccessTokenGuard } from 'src/common/guards';
-import { createProductDto, updateProductDto } from './dto';
+import { updateProductDto } from './dto';
 import { ProductService } from './product.service';
-import { Product } from './types';
 
 @Controller('products')
 export class ProductController {
@@ -35,13 +36,15 @@ export class ProductController {
 
   @UseGuards(AccessTokenGuard)
   @HttpCode(HttpStatus.CREATED)
+  @Roles(UserRoles.ADMIN, UserRoles.MANAGER)
   @Post()
-  @Roles(UserRoles.ADMIN)
-  async createProduct(
-    @GetCurrentUserId() userId: string,
-    @Body() dto: createProductDto
-  ): Promise<Product> {
-    return this.productService.createProduct({ ...dto, userId });
+  async createProduct(@GetCurrentUserId() userId: string, @Body() data: any): Promise<Product> {
+    console.log('Request body: ', data);
+
+    const product = await this.productService.createProduct(data, userId);
+
+    console.log('Product created: ', product);
+    return product;
   }
 
   @UseGuards(AccessTokenGuard)
@@ -52,7 +55,7 @@ export class ProductController {
 
   @UseGuards(AccessTokenGuard)
   @Delete(':id')
-  async deleteProduct(@Param('id') id: string): Promise<void> {
-    await this.productService.deleteProduct(id);
+  async deleteProduct(@Param('id') id: string, @Res() res: Response): Promise<void> {
+    await this.productService.deleteProduct(id, res);
   }
 }
