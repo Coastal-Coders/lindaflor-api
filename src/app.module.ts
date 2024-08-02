@@ -5,10 +5,17 @@ import { AuthModule } from './auth/auth.module';
 import { AccessTokenGuard } from './common/guards';
 import { RolesGuard } from './common/guards/roles.guard';
 import { ProductModule } from './modules/products/product.module';
+import { UserModule } from './modules/users/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, ProductModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    AuthModule,
+    ProductModule,
+    UserModule,
+  ],
   providers: [
     {
       provide: APP_GUARD,
