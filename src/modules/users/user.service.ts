@@ -156,9 +156,21 @@ export class UserService {
     res.status(200).send({ message: 'Password changed' });
   }
 
-  // TODO: Functionality to change user role.
-  async changeUserRole() {
-    return null;
+  async changeUserRole(userId: string, roles: UserRoles[], res: Response) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) throw new NotFoundException();
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        role: roles,
+        updatedAt: new Date(),
+      },
+    });
+
+    res.status(200).send({ message: 'User role changed' });
   }
 
   // TODO: Functionality to handle password resets, through email.

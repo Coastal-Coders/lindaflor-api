@@ -90,7 +90,17 @@ export class UserController {
     await this.userService.changePassword(userId, currentPassword, newPassword, res);
   }
 
-  async changeUserRole() {}
+  @UseGuards(AccessTokenGuard)
+  @Roles(UserRoles.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Patch('role/:id')
+  async changeUserRole(
+    @Param('id') id: string,
+    @Body('role') role: UserRoles[],
+    @Res() res: Response
+  ) {
+    return this.userService.changeUserRole(id, role, res);
+  }
 
   async resetPassword() {}
 
