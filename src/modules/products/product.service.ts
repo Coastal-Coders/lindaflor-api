@@ -28,8 +28,23 @@ export class ProductService {
 
   async createProduct(data: createProductDTO, userId: string) {
     const { name, description, price, size, color, stock, image } = data;
+    console.log('Creating product: ', data);
 
-    console.log('Create product: ', data);
+    let imageData: Buffer | null = null;
+
+    if (image) {
+      try {
+        console.log('Processing image upload');
+        imageData = Buffer.from(image.buffer);
+        console.log('Image processed and converted to binary');
+      } catch (error) {
+        console.log('Error processing image upload: ', error);
+        //FIXME: Error processing image upload:  TypeError [ERR_INVALID_ARG_TYPE]: The first argument must be of type string or an instance of Buffer, ArrayBuffer, or Array or an Array-like Object. Received undefined
+        throw new Error(error);
+      }
+    }
+
+    console.log('Image data: ', imageData);
 
     try {
       const product = await this.prisma.product.create({
@@ -41,7 +56,7 @@ export class ProductService {
           size,
           color,
           stock,
-          image,
+          image: imageData ? [imageData] : null,
         },
       });
 

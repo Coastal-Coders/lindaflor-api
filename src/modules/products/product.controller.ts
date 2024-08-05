@@ -9,8 +9,11 @@ import {
   Patch,
   Post,
   Res,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UserRoles, type Product } from '@prisma/client';
 import type { Response } from 'express';
 import { GetCurrentUserId, Public, Roles } from 'src/common/decorators';
@@ -37,9 +40,22 @@ export class ProductController {
   @UseGuards(AccessTokenGuard)
   @HttpCode(HttpStatus.CREATED)
   @Roles(UserRoles.ADMIN, UserRoles.MANAGER)
+  @UseInterceptors(FileInterceptor('image'))
   @Post()
-  async createProduct(@GetCurrentUserId() userId: string, @Body() data: any): Promise<Product> {
+  async createProduct(
+    @GetCurrentUserId() userId: string,
+    @Body() data: any,
+    @UploadedFile() image: Express.Multer.File
+  ): Promise<Product> {
+    console.log('Post request received');
     console.log('Request body: ', data);
+
+    if (image) {
+      console.log('Uploaded image:', image);
+      data.image = image;
+    } else {
+      console.log('No image uploaded');
+    }
 
     const product = await this.productService.createProduct(data, userId);
 

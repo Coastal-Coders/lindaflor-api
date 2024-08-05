@@ -1,36 +1,31 @@
 import type { Colors, Sizes } from '@prisma/client';
-import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsArray } from 'class-validator';
 
 export class createProductDTO {
-  @IsNotEmpty()
   @IsString()
-  userId: string;
-
   @IsNotEmpty()
-  @IsString()
   name: string;
 
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
   description: string;
 
-  @IsNotEmpty()
   @IsNumber()
+  @IsNotEmpty()
   price: number;
 
-  @IsNotEmpty()
   @IsArray()
+  @IsNotEmpty()
   size: Sizes[];
 
-  @IsNotEmpty()
   @IsArray()
+  @IsNotEmpty()
   color: Colors[];
 
-  @IsNotEmpty()
   @IsNumber()
+  @IsNotEmpty()
   stock: number;
 
   @IsNotEmpty()
-  @IsArray()
-  image: string[];
+  image: Express.Multer.File;
 }

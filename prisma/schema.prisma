@@ -34,7 +34,7 @@ model Product {
   price       Float
   name        String
   description String
-  image       String[]
+  image       Bytes[]
   size        Sizes[]
   color       Colors[]
 
