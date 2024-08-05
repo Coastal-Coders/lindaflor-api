@@ -42,4 +42,21 @@ export class AuthController {
   ): Promise<void> {
     await this.authService.refreshTokens(userId, refreshToken, res);
   }
+
+  @Public()
+  @Post('password-reset/request')
+  @HttpCode(HttpStatus.OK)
+  async requestPasswordReset(@Body('email') email: string): Promise<void> {
+    await this.authService.requestPasswordReset(email);
+  }
+
+  @Public()
+  @Post('password-reset/reset')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Body('token') token: string,
+    @Body('newPassword') newPassword: string
+  ): Promise<void> {
+    await this.authService.resetPassword(token, newPassword);
+  }
 }

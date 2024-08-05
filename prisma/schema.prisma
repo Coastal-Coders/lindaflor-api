@@ -16,6 +16,10 @@ model User {
   name    String?
   surname String?
   hash    String
+  
+  resetToken  String?
+  resetTokenExpiry DateTime?
+  
   role    UserRoles[]
   Product Product[]
 
