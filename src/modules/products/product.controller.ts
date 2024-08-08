@@ -9,16 +9,16 @@ import {
   Patch,
   Post,
   Res,
-  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { UserRoles, type Product } from '@prisma/client';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { type Product, UserRoles } from '@prisma/client';
 import type { Response } from 'express';
 import { GetCurrentUserId, Public, Roles } from 'src/common/decorators';
 import { AccessTokenGuard } from 'src/common/guards';
-import { updateProductDto } from './dto';
+import { type createProductDTO, updateProductDto } from './dto';
 import { ProductService } from './product.service';
 
 @Controller('products')
@@ -40,27 +40,15 @@ export class ProductController {
   @UseGuards(AccessTokenGuard)
   @HttpCode(HttpStatus.CREATED)
   @Roles(UserRoles.ADMIN, UserRoles.MANAGER)
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FilesInterceptor('image', 5))
   @Post()
   async createProduct(
     @GetCurrentUserId() userId: string,
-    @Body() data: any,
-    @UploadedFile() image: Express.Multer.File
+    @Body() data: Omit<createProductDTO, 'image'>,
+    @UploadedFiles() images: Express.Multer.File[],
+    @Res() res: Response
   ): Promise<Product> {
-    console.log('Post request received');
-    console.log('Request body: ', data);
-
-    if (image) {
-      console.log('Uploaded image:', image);
-      data.image = image;
-    } else {
-      console.log('No image uploaded');
-    }
-
-    const product = await this.productService.createProduct(data, userId);
-
-    console.log('Product created: ', product);
-    return product;
+    return await this.productService.createProduct({ ...data, image: images }, userId, res);
   }
 
   @UseGuards(AccessTokenGuard)

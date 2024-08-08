@@ -1,5 +1,4 @@
-import type { Colors, Sizes } from '@prisma/client';
-import { IsNotEmpty, IsNumber, IsString, IsArray } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class createProductDTO {
   @IsString()
@@ -10,22 +9,26 @@ export class createProductDTO {
   @IsNotEmpty()
   description: string;
 
-  @IsNumber()
+  // FIXME: Change to number
+  @IsString()
   @IsNotEmpty()
-  price: number;
+  price: string;
 
-  @IsArray()
+  // FIXME: Change to array
+  @IsString()
   @IsNotEmpty()
-  size: Sizes[];
+  size: string;
 
-  @IsArray()
+  // FIXME: Change to array
+  @IsString()
   @IsNotEmpty()
-  color: Colors[];
+  color: string;
 
-  @IsNumber()
+  // FIXME: Change to number
+  @IsString()
   @IsNotEmpty()
-  stock: number;
+  stock: string;
 
   @IsNotEmpty()
-  image: Express.Multer.File;
+  image: Express.Multer.File[];
 }
