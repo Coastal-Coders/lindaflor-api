@@ -26,30 +26,35 @@ export class ProductService {
     return products;
   }
 
-  async createProduct(data: createProductDTO, userId: string) {
-    const { name, description, price, size, color, stock, image } = data;
+  async createProduct(data: createProductDTO, userId: string, res: Response): Promise<Product> {
+    let imageData: string[] | null = null;
 
-    console.log('Create product: ', data);
+    if (data.image && data.image.length > 0) {
+      try {
+        imageData = data.image.map((img) => img.buffer.toString('base64'));
+      } catch (error) {
+        throw new Error(`Error processing image upload: ${error.message || error}`);
+      }
+    }
 
     try {
       const product = await this.prisma.product.create({
         data: {
           userId,
-          name,
-          description,
-          price,
-          size,
-          color,
-          stock,
-          image,
+          name: data.name,
+          description: data.description,
+          price: data.price,
+          size: data.size,
+          color: data.color,
+          stock: data.stock,
+          image: imageData,
         },
       });
 
-      console.log('Product created: ', product);
+      res.status(201).send({ message: 'Product created' });
       return product;
     } catch (error) {
-      console.log('Error creating product: ', error);
-      throw new Error(error);
+      throw new Error(`Error creating product: ${error.message || error}`);
     }
   }
 

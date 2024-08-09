@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class updateProductDto {
   @IsOptional()
@@ -9,9 +9,13 @@ export class updateProductDto {
   @IsString()
   description?: string;
 
+  // FIXME: Change to number
+  // @IsOptional()
+  // @IsNumber()
+  // price?: number;
   @IsOptional()
-  @IsNumber()
-  price?: number;
+  @IsString()
+  price?: string;
 
   @IsOptional()
   @IsString()
@@ -21,7 +25,11 @@ export class updateProductDto {
   @IsString()
   color?: string;
 
+  // FIXME: Change to number
+  // @IsOptional()
+  // @IsNumber()
+  // stock?: number;
   @IsOptional()
-  @IsNumber()
-  stock?: number;
+  @IsString()
+  stock?: string;
 }
