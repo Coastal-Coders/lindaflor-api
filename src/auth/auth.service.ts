@@ -2,8 +2,8 @@ import { ForbiddenException, Injectable, InternalServerErrorException } from '@n
 import { JwtService } from '@nestjs/jwt';
 import { UserRoles } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SignInDTO, SignUpDTO } from './dto';
 import { JwtPayload, Tokens } from './types';
@@ -64,7 +64,7 @@ export class AuthService {
 
       res.status(200).send({ message: 'Logout successful' });
     } catch (error) {
-      throw new InternalServerErrorException('Error logging out');
+      throw new InternalServerErrorException(`Error logging out ${error.message || error}`);
     }
   }
 
@@ -112,7 +112,7 @@ export class AuthService {
 
       res.send({ message: 'Tokens refreshed' });
     } catch (error) {
-      throw new ForbiddenException('Error refreshing tokens');
+      throw new ForbiddenException(`Error refreshing tokens ${error.message || error}`);
     }
   }
 

@@ -1,2 +1,2 @@
-export * from './SignUp.dto';
-export * from './SignIn.dto';
+export { SignInDTO } from './SignIn.dto';
+export { SignUpDTO } from './SignUp.dto';

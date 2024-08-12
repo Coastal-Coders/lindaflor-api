@@ -1,6 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
-import { GetCurrentUserId, GetCurrentUser, Public } from 'src/common/decorators';
+import { GetCurrentUser, GetCurrentUserId, Public } from 'src/common/decorators';
 import { AccessTokenGuard, RefreshTokenGuard } from 'src/common/guards';
 import { AuthService } from './auth.service';
 import { SignInDTO, SignUpDTO } from './dto';

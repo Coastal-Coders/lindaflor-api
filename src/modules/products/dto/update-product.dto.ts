@@ -1,6 +1,7 @@
-import { IsOptional, IsString } from 'class-validator';
+import type { Colors, Sizes } from '@prisma/client';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class updateProductDto {
+export class updateProductDTO {
   @IsOptional()
   @IsString()
   name?: string;
@@ -9,27 +10,19 @@ export class updateProductDto {
   @IsString()
   description?: string;
 
-  // FIXME: Change to number
-  // @IsOptional()
-  // @IsNumber()
-  // price?: number;
   @IsOptional()
-  @IsString()
-  price?: string;
+  @IsNumber()
+  price?: number;
 
   @IsOptional()
-  @IsString()
-  size?: string;
+  @IsArray()
+  size?: Sizes[];
 
   @IsOptional()
-  @IsString()
-  color?: string;
+  @IsArray()
+  color?: Colors[];
 
-  // FIXME: Change to number
-  // @IsOptional()
-  // @IsNumber()
-  // stock?: number;
   @IsOptional()
-  @IsString()
-  stock?: string;
+  @IsNumber()
+  stock?: number;
 }

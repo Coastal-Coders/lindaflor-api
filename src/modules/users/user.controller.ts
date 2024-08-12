@@ -1,18 +1,6 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Patch,
-  Post,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
-import { UserRoles, type User } from '@prisma/client';
+// prettier-ignore
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Res, UseGuards } from '@nestjs/common';
+import { type User, UserRoles } from '@prisma/client';
 import type { Response } from 'express';
 import { GetCurrentUserId, Roles } from 'src/common/decorators';
 import { AccessTokenGuard, RefreshTokenGuard } from 'src/common/guards';
@@ -42,7 +30,7 @@ export class UserController {
   @Roles(UserRoles.ADMIN)
   @HttpCode(HttpStatus.CREATED)
   async createUser(
-    @Body()
+    @Body() // FIXME
     dto: {
       name: string;
       surname: string;
@@ -81,10 +69,11 @@ export class UserController {
   @Patch('change-password/')
   async changePassword(
     @GetCurrentUserId() userId: string,
-    @Body() changePasswordDto: { currentPassword: string; newPassword: string },
+    // FIXME
+    @Body() data: { currentPassword: string; newPassword: string },
     @Res() res: Response
   ): Promise<void> {
-    const { currentPassword, newPassword } = changePasswordDto;
+    const { currentPassword, newPassword } = data;
     if (!currentPassword || !newPassword) throw new BadRequestException('Passwords are required');
 
     await this.userService.changePassword(userId, currentPassword, newPassword, res);

@@ -1,24 +1,13 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Patch,
-  Post,
-  Res,
-  UploadedFiles,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
+// prettier-ignore
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Res, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { type Product, UserRoles } from '@prisma/client';
 import type { Response } from 'express';
+import { Express } from 'express';
 import { GetCurrentUserId, Public, Roles } from 'src/common/decorators';
 import { AccessTokenGuard } from 'src/common/guards';
-import { type createProductDTO, updateProductDto } from './dto';
+import 'multer';
+import { type createProductDTO, updateProductDTO } from './dto';
 import { ProductService } from './product.service';
 
 @Controller('products')
@@ -53,7 +42,7 @@ export class ProductController {
 
   @UseGuards(AccessTokenGuard)
   @Patch(':id')
-  async updateProduct(@Param('id') id: string, @Body() dto: updateProductDto): Promise<Product> {
+  async updateProduct(@Param('id') id: string, @Body() dto: updateProductDTO): Promise<Product> {
     return this.productService.updateProduct(id, dto);
   }
 

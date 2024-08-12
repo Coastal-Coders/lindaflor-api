@@ -1,3 +1,3 @@
-export * from './tokens.types';
-export * from './jwtPayload.type';
-export * from './jwtPayloadRefresh.type';
+export { JwtPayload } from './jwtPayload.type';
+export { JwtPayloadRefresh } from './jwtPayloadRefresh.type';
+export { Tokens } from './tokens.types';

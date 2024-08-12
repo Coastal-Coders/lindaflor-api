@@ -1,14 +1,9 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
-import { UserRoles, type User } from '@prisma/client';
+// prettier-ignore
+import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { type User, UserRoles } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import * as bcrypt from 'bcrypt';
 import type { Response } from 'express';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import type { CreateUserDTO, FindUserDTO, GetUserPermissionsDTO, UpdateUserDTO } from './dto';
 
@@ -129,6 +124,7 @@ export class UserService {
   async changePassword(
     userId: string,
     currentPassword: string,
+    // FIXME
     newPassword: string,
     res: Response
   ) {

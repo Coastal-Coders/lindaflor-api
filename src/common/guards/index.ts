@@ -1,3 +1,3 @@
-export * from './accessToken.guard';
-export * from './refreshToken.guard';
-export * from './roles.guard';
+export { AccessTokenGuard } from './accessToken.guard';
+export { RefreshTokenGuard } from './refreshToken.guard';
+export { RolesGuard } from './roles.guard';
