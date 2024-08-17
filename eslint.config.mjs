@@ -15,7 +15,7 @@ export default [
       parser: tsParser,
       parserOptions: { project: './tsconfig.json', ecmaFeatures: { jsx: true } },
     },
-    ignores: ['node_modules', 'dist', 'coverage', 'build'],
+    ignores: ['node_modules', 'dist', 'coverage', 'build', '.config/*'],
   },
 
   {
